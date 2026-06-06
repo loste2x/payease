@@ -1,0 +1,52 @@
+{
+  "name": "PayEase - Flutter Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Dart-Code.flutter",
+        "Dart-Code.dart-code",
+        "felixangelov.bloc",
+        "Nash.awesome-flutter-snippets",
+        "usernamehw.errorlens",
+        "eamodio.gitlens",
+        "esbenp.prettier-vscode",
+        "pkief.material-icon-theme",
+        "formulahendry.auto-rename-tag",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "dart.flutterSdkPath": "/usr/local/flutter",
+        "dart.sdkPath": "/usr/local/flutter/bin/cache/dart-sdk",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "Dart-Code.dart-code",
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        "dart.lineLength": 100,
+        "explorer.fileNesting.enabled": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "files.trimTrailingWhitespace": true,
+        "editor.tabSize": 2,
+        "editor.bracketPairColorization.enabled": true
+      }
+    }
+  },
+  "forwardPorts": [3000, 8080, 5000],
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "remoteUser": "vscode"
+}
