@@ -2,21 +2,33 @@ import 'package:equatable/equatable.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
+
   @override
   List<Object?> get props => [];
 }
 
-class SendOtpEvent extends AuthEvent {
+/// Send OTP to mobile
+class SendOtpRequested extends AuthEvent {
   final String mobile;
-  const SendOtpEvent(this.mobile);
+
+  const SendOtpRequested(this.mobile);
+
   @override
   List<Object?> get props => [mobile];
 }
 
-class VerifyOtpEvent extends AuthEvent {
+/// Verify OTP
+class VerifyOtpRequested extends AuthEvent {
   final String mobile;
   final String otp;
-  const VerifyOtpEvent({required this.mobile, required this.otp});
+
+  const VerifyOtpRequested({required this.mobile, required this.otp});
+
   @override
   List<Object?> get props => [mobile, otp];
+}
+
+/// Reset auth state (e.g., back from OTP page)
+class AuthReset extends AuthEvent {
+  const AuthReset();
 }

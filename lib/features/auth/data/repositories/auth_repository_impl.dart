@@ -4,12 +4,19 @@ import '../datasources/auth_remote_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
-  AuthRepositoryImpl(this.remoteDataSource);
+
+  AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<void> sendOtp(String mobile) => remoteDataSource.sendOtp(mobile);
+  Future<void> sendOtp(String mobile) async {
+    return await remoteDataSource.sendOtp(mobile);
+  }
 
   @override
-  Future<User> verifyOtp({required String mobile, required String otp}) =>
-      remoteDataSource.verifyOtp(mobile: mobile, otp: otp);
+  Future<User> verifyOtp({
+    required String mobile,
+    required String otp,
+  }) async {
+    return await remoteDataSource.verifyOtp(mobile: mobile, otp: otp);
+  }
 }

@@ -3,30 +3,47 @@ import '../../domain/entities/user.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
+
   @override
   List<Object?> get props => [];
 }
 
-class AuthInitial extends AuthState {}
-class AuthLoading extends AuthState {}
+/// Initial state
+class AuthInitial extends AuthState {
+  const AuthInitial();
+}
 
-class OtpSentState extends AuthState {
+/// Loading state (OTP sending / verifying)
+class AuthLoading extends AuthState {
+  const AuthLoading();
+}
+
+/// OTP sent successfully
+class OtpSentSuccess extends AuthState {
   final String mobile;
-  const OtpSentState(this.mobile);
+
+  const OtpSentSuccess(this.mobile);
+
   @override
   List<Object?> get props => [mobile];
 }
 
-class AuthenticatedState extends AuthState {
+/// User authenticated successfully
+class Authenticated extends AuthState {
   final User user;
-  const AuthenticatedState(this.user);
+
+  const Authenticated(this.user);
+
   @override
   List<Object?> get props => [user];
 }
 
-class AuthErrorState extends AuthState {
+/// Auth failed
+class AuthFailure extends AuthState {
   final String message;
-  const AuthErrorState(this.message);
+
+  const AuthFailure(this.message);
+
   @override
   List<Object?> get props => [message];
 }
