@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'config/routes/route_names.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/otp_page.dart';
-import 'features/home/presentation/pages/home_page.dart';
+import 'features/home/presentation/pages/main_wrapper_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -29,7 +29,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.home,
         name: 'home',
-        builder: (context, state) => const HomePage(),
+        builder: (context, state) => const MainWrapperPage(),
       ),
     ],
   );
