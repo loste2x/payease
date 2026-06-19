@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_sizes.dart';
 
-enum ButtonType { primary, secondary, outline, text }
+enum ButtonType { primary, secondary, tonal, outline, text }
 
 class CustomButton extends StatelessWidget {
   final String label;
@@ -11,7 +9,7 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final bool isFullWidth;
   final IconData? icon;
-  final double? height;
+  final double height;
 
   const CustomButton({
     super.key,
@@ -21,20 +19,21 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = true,
     this.icon,
-    this.height,
+    this.height = 52,
   });
 
   @override
   Widget build(BuildContext context) {
-    final btnHeight = height ?? AppSizes.buttonMd;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     Widget child = isLoading
-        ? const SizedBox(
+        ? SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation(Colors.white),
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation(_getLoadingColor(colorScheme)),
             ),
           )
         : Row(
@@ -43,72 +42,69 @@ class CustomButton extends StatelessWidget {
             children: [
               if (icon != null) ...[
                 Icon(icon, size: 20),
-                const SizedBox(width: AppSizes.sm),
+                const SizedBox(width: 8),
               ],
               Text(label),
             ],
           );
 
-    Widget button;
+    final size = Size(isFullWidth ? double.infinity : 0, height);
 
     switch (type) {
       case ButtonType.primary:
-        button = ElevatedButton(
+        return FilledButton(
           onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            minimumSize: Size(isFullWidth ? double.infinity : 0, btnHeight),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-          ),
+          style: FilledButton.styleFrom(minimumSize: size),
           child: child,
         );
-        break;
 
       case ButtonType.secondary:
-        button = ElevatedButton(
+        return FilledButton.tonal(
           onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-            foregroundColor: Colors.white,
-            minimumSize: Size(isFullWidth ? double.infinity : 0, btnHeight),
+          style: FilledButton.styleFrom(
+            backgroundColor: colorScheme.secondaryContainer,
+            foregroundColor: colorScheme.onSecondaryContainer,
+            minimumSize: size,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
           child: child,
         );
-        break;
+
+      case ButtonType.tonal:
+        return FilledButton.tonal(
+          onPressed: isLoading ? null : onPressed,
+          style: FilledButton.styleFrom(minimumSize: size),
+          child: child,
+        );
 
       case ButtonType.outline:
-        button = OutlinedButton(
+        return OutlinedButton(
           onPressed: isLoading ? null : onPressed,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            minimumSize: Size(isFullWidth ? double.infinity : 0, btnHeight),
-            side: const BorderSide(color: AppColors.primary, width: 1.5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-          ),
+          style: OutlinedButton.styleFrom(minimumSize: size),
           child: child,
         );
-        break;
 
       case ButtonType.text:
-        button = TextButton(
+        return TextButton(
           onPressed: isLoading ? null : onPressed,
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            minimumSize: Size(isFullWidth ? double.infinity : 0, btnHeight),
-          ),
           child: child,
         );
-        break;
     }
+  }
 
-    return button;
+  Color _getLoadingColor(ColorScheme cs) {
+    switch (type) {
+      case ButtonType.primary:
+        return cs.onPrimary;
+      case ButtonType.secondary:
+        return cs.onSecondaryContainer;
+      case ButtonType.tonal:
+        return cs.onSecondaryContainer;
+      case ButtonType.outline:
+      case ButtonType.text:
+        return cs.primary;
+    }
   }
 }
