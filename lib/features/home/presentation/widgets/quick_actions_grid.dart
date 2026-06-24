@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/extensions/context_extensions.dart';
 
 class QuickActionsGrid extends StatelessWidget {
   const QuickActionsGrid({super.key});
@@ -10,85 +8,68 @@ class QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _QuickAction(
-        icon: Icons.qr_code_scanner_rounded,
-        label: 'Scan & Pay',
-        color: AppColors.primary,
-      ),
-      _QuickAction(
-        icon: Icons.send_rounded,
-        label: 'To Mobile',
-        color: AppColors.secondary,
-      ),
-      _QuickAction(
-        icon: Icons.account_balance_rounded,
-        label: 'To Bank',
-        color: AppColors.info,
-      ),
-      _QuickAction(
-        icon: Icons.receipt_long_rounded,
-        label: 'Pay Bills',
-        color: AppColors.tertiary,
-      ),
-      _QuickAction(
-        icon: Icons.smartphone_rounded,
-        label: 'Recharge',
-        color: AppColors.success,
-      ),
-      _QuickAction(
-        icon: Icons.local_offer_rounded,
-        label: 'Offers',
-        color: AppColors.warning,
-      ),
-      _QuickAction(
-        icon: Icons.contact_phone_rounded,
-        label: 'Contacts',
-        color: AppColors.bronze,
-      ),
-      _QuickAction(
-        icon: Icons.more_horiz_rounded,
-        label: 'More',
-        color: AppColors.onSurfaceVariant,
-      ),
+      _QuickAction(icon: Icons.send_rounded, label: 'To\nMobile', gradient: AppColors.primaryGradient),
+      _QuickAction(icon: Icons.account_balance_rounded, label: 'To\nBank', gradient: AppColors.blueGradient),
+      _QuickAction(icon: Icons.qr_code_2_rounded, label: 'To Self\nQR', gradient: AppColors.successGradient),
+      _QuickAction(icon: Icons.contact_phone_rounded, label: 'To\nContacts', gradient: AppColors.premiumGradient),
     ];
 
     return Container(
-      padding: const EdgeInsets.all(AppSizes.lg),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(color: AppColors.outlineVariant, width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.flash_on_rounded,
-                color: context.colors.primary,
-                size: 18,
+              const Text(
+                'Send Money',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
+                ),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Quick Actions',
-                style: context.textStyles.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  gradient: AppColors.successGradient,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  '0% FEE',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.lg),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 4,
-            mainAxisSpacing: AppSizes.lg,
-            crossAxisSpacing: AppSizes.sm,
-            childAspectRatio: 0.85,
-            children: actions
-                .map((a) => _QuickActionTile(action: a))
-                .toList(),
+          const SizedBox(height: 4),
+          Text(
+            'Pay anyone, anywhere, anytime',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: actions.map((a) => Expanded(child: _ActionTile(action: a))).toList(),
           ),
         ],
       ),
@@ -99,47 +80,54 @@ class QuickActionsGrid extends StatelessWidget {
 class _QuickAction {
   final IconData icon;
   final String label;
-  final Color color;
+  final Gradient gradient;
 
-  _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
+  _QuickAction({required this.icon, required this.label, required this.gradient});
 }
 
-class _QuickActionTile extends StatelessWidget {
+class _ActionTile extends StatelessWidget {
   final _QuickAction action;
 
-  const _QuickActionTile({required this.action});
+  const _ActionTile({required this.action});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {},
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: Column(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: action.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: action.gradient,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(action.icon, color: Colors.white, size: 26),
             ),
-            child: Icon(action.icon, color: action.color, size: 24),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            action.label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: context.textStyles.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 10),
+            Text(
+              action.label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+                height: 1.3,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

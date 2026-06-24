@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/utils/formatters.dart';
 
 class WalletBalanceCard extends StatefulWidget {
@@ -14,122 +12,151 @@ class WalletBalanceCard extends StatefulWidget {
 
 class _WalletBalanceCardState extends State<WalletBalanceCard> {
   bool _showBalance = true;
-
-  // Demo balance: ₹12,450.75 stored in paisa
   final int _balanceInPaisa = 1245075;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.xl),
       decoration: BoxDecoration(
-        gradient: AppColors.walletGradient,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3949AB).withValues(alpha: 0.25),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          // Balance Section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'PayEase Wallet',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    InkWell(
+                      onTap: () => setState(() => _showBalance = !_showBalance),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          _showBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSizes.sm),
-              Text(
-                'PayEase Wallet',
-                style: context.textStyles.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: Icon(
-                  _showBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                onPressed: () {
-                  setState(() => _showBalance = !_showBalance);
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: 16),
 
-          // Balance Amount
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _showBalance
-                    ? Formatters.currency(_balanceInPaisa)
-                    : '₹ ••••••',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
+                // Balance
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        '₹',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _showBalance
+                          ? _formatLargeAmount(_balanceInPaisa)
+                          : '••••••',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: AppSizes.xs),
+                const SizedBox(height: 4),
 
-          Text(
-            'Available Balance',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.tertiary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.trending_up_rounded, size: 12, color: AppColors.tertiary),
+                          SizedBox(width: 3),
+                          Text(
+                            '+₹250 this week',
+                            style: TextStyle(
+                              color: AppColors.tertiary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
-          const SizedBox(height: AppSizes.xl),
+          // Divider
+          Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
 
-          // Action Buttons Row
+          // Action Buttons
           Row(
             children: [
-              Expanded(
-                child: _ActionChip(
-                  icon: Icons.add_rounded,
-                  label: 'Add Money',
-                  onTap: () {},
-                ),
+              _BalanceAction(
+                icon: Icons.add_rounded,
+                label: 'Add Money',
+                onTap: () {},
               ),
-              const SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: _ActionChip(
-                  icon: Icons.arrow_outward_rounded,
-                  label: 'Send',
-                  onTap: () {},
-                ),
+              _VDivider(),
+              _BalanceAction(
+                icon: Icons.arrow_outward_rounded,
+                label: 'Send',
+                onTap: () {},
               ),
-              const SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: _ActionChip(
-                  icon: Icons.account_balance_rounded,
-                  label: 'Withdraw',
-                  onTap: () {},
-                ),
+              _VDivider(),
+              _BalanceAction(
+                icon: Icons.account_balance_rounded,
+                label: 'Withdraw',
+                onTap: () {},
               ),
             ],
           ),
@@ -137,14 +164,19 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
       ),
     );
   }
+
+  String _formatLargeAmount(int paisa) {
+    final rupees = paisa / 100;
+    return Formatters.currency(paisa, showSymbol: false);
+  }
 }
 
-class _ActionChip extends StatelessWidget {
+class _BalanceAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _ActionChip({
+  const _BalanceAction({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -152,30 +184,38 @@ class _ActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.18),
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+    return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
               Icon(icon, color: Colors.white, size: 22),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 label,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _VDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 40,
+      color: Colors.white.withValues(alpha: 0.1),
     );
   }
 }

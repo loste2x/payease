@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/extensions/context_extensions.dart';
 
 class PromoBannerCarousel extends StatefulWidget {
   const PromoBannerCarousel({super.key});
@@ -12,34 +10,30 @@ class PromoBannerCarousel extends StatefulWidget {
 }
 
 class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
-  final PageController _pageController = PageController(viewportFraction: 0.9);
+  final _pageController = PageController(viewportFraction: 0.88);
   int _currentPage = 0;
 
-  final List<_PromoBanner> _banners = [
-    _PromoBanner(
-      title: 'Get ₹100 Cashback!',
+  final _banners = [
+    _Banner(
+      tag: '💰 FIRST100',
+      title: 'Get ₹100 Cashback',
       subtitle: 'On your first bill payment',
-      tagText: 'FIRST100',
+      gradient: AppColors.primaryGradient,
       icon: Icons.celebration_rounded,
+    ),
+    _Banner(
+      tag: '⚡ ELEC50',
+      title: '10% OFF Electricity',
+      subtitle: 'Save up to ₹50 on every bill',
       gradient: AppColors.cashbackGradient,
-    ),
-    _PromoBanner(
-      title: 'Flat 10% Off',
-      subtitle: 'On electricity bills, upto ₹50',
-      tagText: 'ELEC50',
       icon: Icons.bolt_rounded,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
-      ),
     ),
-    _PromoBanner(
-      title: 'Weekend Bonus',
+    _Banner(
+      tag: '🎁 WEEKEND',
+      title: 'Weekend Bonanza',
       subtitle: '5% cashback on UPI payments',
-      tagText: 'WEEKEND',
+      gradient: AppColors.premiumGradient,
       icon: Icons.weekend_rounded,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
-      ),
     ),
   ];
 
@@ -55,68 +49,65 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.lg,
-            0,
-            AppSizes.lg,
-            AppSizes.md,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
           child: Row(
             children: [
-              Icon(
-                Icons.local_offer_rounded,
-                color: AppColors.tertiary,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Offers for You',
-                style: context.textStyles.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              const Text(
+                '🔥 Hot Offers',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
                 ),
               ),
               const Spacer(),
               TextButton(
                 onPressed: () {},
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.primary,
                 ),
-                child: const Text('See All'),
+                child: const Row(
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    Icon(Icons.arrow_forward_rounded, size: 14),
+                  ],
+                ),
               ),
             ],
           ),
         ),
         SizedBox(
-          height: 130,
+          height: 160,
           child: PageView.builder(
             controller: _pageController,
             itemCount: _banners.length,
             onPageChanged: (i) => setState(() => _currentPage = i),
-            itemBuilder: (context, index) {
+            itemBuilder: (context, i) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-                child: _PromoBannerCard(banner: _banners[index]),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _BannerCard(banner: _banners[i]),
               );
             },
           ),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: 12),
         Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(_banners.length, (i) {
-              final isActive = i == _currentPage;
+              final active = i == _currentPage;
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 height: 6,
-                width: isActive ? 20 : 6,
+                width: active ? 24 : 6,
                 decoration: BoxDecoration(
-                  color: isActive
-                      ? context.colors.primary
-                      : AppColors.outlineVariant,
+                  color: active ? AppColors.primary : AppColors.outlineVariant,
                   borderRadius: BorderRadius.circular(3),
                 ),
               );
@@ -128,89 +119,114 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
   }
 }
 
-class _PromoBanner {
+class _Banner {
+  final String tag;
   final String title;
   final String subtitle;
-  final String tagText;
-  final IconData icon;
   final Gradient gradient;
+  final IconData icon;
 
-  _PromoBanner({
+  _Banner({
+    required this.tag,
     required this.title,
     required this.subtitle,
-    required this.tagText,
-    required this.icon,
     required this.gradient,
+    required this.icon,
   });
 }
 
-class _PromoBannerCard extends StatelessWidget {
-  final _PromoBanner banner;
+class _BannerCard extends StatelessWidget {
+  final _Banner banner;
 
-  const _PromoBannerCard({required this.banner});
+  const _BannerCard({required this.banner});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: banner.gradient,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
-      padding: const EdgeInsets.all(AppSizes.lg),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-            child: Icon(banner.icon, color: Colors.white, size: 30),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-          const SizedBox(width: AppSizes.lg),
-          Expanded(
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Icon(
+              banner.icon,
+              size: 140,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    banner.tagText,
+                    banner.tag,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 14),
                 Text(
                   banner.title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    height: 1.1,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 6),
                 Text(
                   banner.subtitle,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Claim Now',
+                        style: TextStyle(
+                          color: AppColors.onSurface,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.onSurface),
+                    ],
+                  ),
                 ),
               ],
             ),

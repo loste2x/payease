@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/extensions/context_extensions.dart';
 
 class BillCategoriesStrip extends StatelessWidget {
   const BillCategoriesStrip({super.key});
@@ -10,117 +8,115 @@ class BillCategoriesStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categories = [
-      _BillCategory(icon: Icons.bolt_rounded, label: 'Electricity', color: const Color(0xFFFF9800)),
-      _BillCategory(icon: Icons.smartphone_rounded, label: 'Mobile', color: const Color(0xFF4CAF50)),
-      _BillCategory(icon: Icons.tv_rounded, label: 'DTH', color: const Color(0xFF9C27B0)),
-      _BillCategory(icon: Icons.wifi_rounded, label: 'Broadband', color: const Color(0xFF00BCD4)),
-      _BillCategory(icon: Icons.local_fire_department_rounded, label: 'Gas', color: const Color(0xFFFF5722)),
-      _BillCategory(icon: Icons.water_drop_rounded, label: 'Water', color: const Color(0xFF03A9F4)),
-      _BillCategory(icon: Icons.credit_card_rounded, label: 'Credit Card', color: const Color(0xFFF44336)),
-      _BillCategory(icon: Icons.car_rental_rounded, label: 'FASTag', color: const Color(0xFFCDDC39)),
+      _Cat(Icons.bolt_rounded, 'Electricity', const Color(0xFFFF9800)),
+      _Cat(Icons.smartphone_rounded, 'Mobile', const Color(0xFF4CAF50)),
+      _Cat(Icons.tv_rounded, 'DTH', const Color(0xFF9C27B0)),
+      _Cat(Icons.wifi_rounded, 'Broadband', const Color(0xFF00BCD4)),
+      _Cat(Icons.local_fire_department_rounded, 'Gas', const Color(0xFFFF5722)),
+      _Cat(Icons.water_drop_rounded, 'Water', const Color(0xFF03A9F4)),
+      _Cat(Icons.credit_card_rounded, 'Credit', const Color(0xFFE91E63)),
+      _Cat(Icons.car_rental_rounded, 'FASTag', const Color(0xFFCDDC39)),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.lg,
-            0,
-            AppSizes.lg,
-            AppSizes.md,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
           ),
-          child: Row(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Icon(
-                Icons.receipt_long_rounded,
-                color: context.colors.primary,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Pay Bills',
-                style: context.textStyles.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              const Text(
+                '🧾 Recharge & Pay Bills',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
                 ),
               ),
               const Spacer(),
               TextButton(
                 onPressed: () {},
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.primary,
                 ),
-                child: const Text('View All'),
+                child: const Text(
+                  'See All',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
               ),
             ],
           ),
-        ),
-        SizedBox(
-          height: 96,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.9,
+            ),
             itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSizes.md),
-            itemBuilder: (context, index) {
-              return _CategoryItem(category: categories[index]);
-            },
+            itemBuilder: (_, i) => _CatTile(cat: categories[i]),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _BillCategory {
+class _Cat {
   final IconData icon;
   final String label;
   final Color color;
-
-  _BillCategory({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
+  _Cat(this.icon, this.label, this.color);
 }
 
-class _CategoryItem extends StatelessWidget {
-  final _BillCategory category;
-
-  const _CategoryItem({required this.category});
+class _CatTile extends StatelessWidget {
+  final _Cat cat;
+  const _CatTile({required this.cat});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {},
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: category.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              ),
-              child: Icon(category.icon, color: category.color, size: 28),
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: cat.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(18),
             ),
-            const SizedBox(height: 6),
-            Text(
-              category.label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: context.textStyles.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            child: Icon(cat.icon, color: cat.color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            cat.label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurface,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

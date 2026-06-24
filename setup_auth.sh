@@ -1,563 +1,167 @@
 #!/bin/bash
+# =============================================================
+# 🚀 PayEase - Smart Auto-Setup Script
+# Works on: Mac, Linux, Windows (Git Bash/WSL)
+# Usage: bash setup.sh
+# =============================================================
 
-echo "🚀 PayEase Auth Module Setup Starting..."
+set -e
 
-# ===== route_names.dart =====
-cat > lib/config/routes/route_names.dart << 'FILE1'
-class RouteNames {
-  static const String login = '/login';
-  static const String otp = '/otp';
-  static const String home = '/home';
-}
-FILE1
-echo "✅ route_names.dart"
+# ─── Colors ───
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
-# ===== service_locator.dart =====
-cat > lib/service_locator.dart << 'FILE2'
-import 'package:get_it/get_it.dart';
-import 'features/auth/data/datasources/auth_remote_datasource.dart';
-import 'features/auth/data/repositories/auth_repository_impl.dart';
-import 'features/auth/domain/repositories/auth_repository.dart';
-import 'features/auth/domain/usecases/send_otp.dart';
-import 'features/auth/domain/usecases/verify_otp.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-
-final sl = GetIt.instance;
-
-Future<void> initDependencies() async {
-  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSource());
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl<AuthRemoteDataSource>()));
-  sl.registerLazySingleton(() => SendOtp(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => VerifyOtp(sl<AuthRepository>()));
-  sl.registerFactory(() => AuthBloc(sendOtp: sl<SendOtp>(), verifyOtp: sl<VerifyOtp>()));
-}
-FILE2
-echo "✅ service_locator.dart"
-
-# ===== app_router.dart =====
-cat > lib/app_router.dart << 'FILE3'
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'config/routes/route_names.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/pages/otp_page.dart';
-import 'features/home/presentation/pages/home_page.dart';
-
-class AppRouter {
-  static final GoRouter router = GoRouter(
-    initialLocation: RouteNames.login,
-    routes: [
-      GoRoute(path: RouteNames.login, builder: (context, state) => const LoginPage()),
-      GoRoute(
-        path: RouteNames.otp,
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          return OtpPage(mobile: extra?['mobile'] as String? ?? '');
-        },
-      ),
-      GoRoute(path: RouteNames.home, builder: (context, state) => const HomePage()),
-    ],
-  );
-}
-FILE3
-echo "✅ app_router.dart"
-
-# ===== app.dart =====
-cat > lib/app.dart << 'FILE4'
-import 'package:flutter/material.dart';
-import 'app_router.dart';
-
-class PayEaseApp extends StatelessWidget {
-  const PayEaseApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'PayEase',
-      debugShowCheckedModeBanner: false,
-      routerConfig: AppRouter.router,
-      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-    );
-  }
-}
-FILE4
-echo "✅ app.dart"
-
-# ===== main.dart =====
-cat > lib/main.dart << 'FILE5'
-import 'package:flutter/material.dart';
-import 'app.dart';
-import 'service_locator.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initDependencies();
-  runApp(const PayEaseApp());
-}
-FILE5
-echo "✅ main.dart"
-
-# ===== user entity =====
-cat > lib/features/auth/domain/entities/user.dart << 'FILE6'
-class User {
-  final String id;
-  final String name;
-  final String mobile;
-  const User({required this.id, required this.name, required this.mobile});
-}
-FILE6
-echo "✅ user.dart"
-
-# ===== auth_repository.dart =====
-cat > lib/features/auth/domain/repositories/auth_repository.dart << 'FILE7'
-import '../entities/user.dart';
-
-abstract class AuthRepository {
-  Future<void> sendOtp(String mobile);
-  Future<User> verifyOtp({required String mobile, required String otp});
-}
-FILE7
-echo "✅ auth_repository.dart"
-
-# ===== send_otp.dart =====
-cat > lib/features/auth/domain/usecases/send_otp.dart << 'FILE8'
-import '../repositories/auth_repository.dart';
-
-class SendOtp {
-  final AuthRepository repository;
-  SendOtp(this.repository);
-  Future<void> call(String mobile) => repository.sendOtp(mobile);
-}
-FILE8
-echo "✅ send_otp.dart"
-
-# ===== verify_otp.dart =====
-cat > lib/features/auth/domain/usecases/verify_otp.dart << 'FILE9'
-import '../entities/user.dart';
-import '../repositories/auth_repository.dart';
-
-class VerifyOtp {
-  final AuthRepository repository;
-  VerifyOtp(this.repository);
-  Future<User> call({required String mobile, required String otp}) =>
-      repository.verifyOtp(mobile: mobile, otp: otp);
-}
-FILE9
-echo "✅ verify_otp.dart"
-
-# ===== user_model.dart =====
-cat > lib/features/auth/data/models/user_model.dart << 'FILE10'
-import '../../domain/entities/user.dart';
-
-class UserModel extends User {
-  const UserModel({required super.id, required super.name, required super.mobile});
-
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(id: json['id'], name: json['name'], mobile: json['mobile']);
-  }
-}
-FILE10
-echo "✅ user_model.dart"
-
-# ===== auth_remote_datasource.dart =====
-cat > lib/features/auth/data/datasources/auth_remote_datasource.dart << 'FILE11'
-import '../models/user_model.dart';
-
-class AuthRemoteDataSource {
-  Future<void> sendOtp(String mobile) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (mobile.length != 10) throw Exception('Enter valid 10-digit number');
-  }
-
-  Future<UserModel> verifyOtp({required String mobile, required String otp}) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (otp != '123456') throw Exception('Invalid OTP. Demo OTP: 123456');
-    return UserModel(id: 'user_001', name: 'PayEase User', mobile: mobile);
-  }
-}
-FILE11
-echo "✅ auth_remote_datasource.dart"
-
-# ===== auth_repository_impl.dart =====
-cat > lib/features/auth/data/repositories/auth_repository_impl.dart << 'FILE12'
-import '../../domain/entities/user.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_remote_datasource.dart';
-
-class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource remoteDataSource;
-  AuthRepositoryImpl(this.remoteDataSource);
-
-  @override
-  Future<void> sendOtp(String mobile) => remoteDataSource.sendOtp(mobile);
-
-  @override
-  Future<User> verifyOtp({required String mobile, required String otp}) =>
-      remoteDataSource.verifyOtp(mobile: mobile, otp: otp);
-}
-FILE12
-echo "✅ auth_repository_impl.dart"
-
-# ===== auth_event.dart =====
-cat > lib/features/auth/presentation/bloc/auth_event.dart << 'FILE13'
-import 'package:equatable/equatable.dart';
-
-abstract class AuthEvent extends Equatable {
-  const AuthEvent();
-  @override
-  List<Object?> get props => [];
+# ─── Helpers ───
+print_header() {
+    echo ""
+    echo -e "${BLUE}╔══════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}  $1"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════╝${NC}"
+    echo ""
 }
 
-class SendOtpEvent extends AuthEvent {
-  final String mobile;
-  const SendOtpEvent(this.mobile);
-  @override
-  List<Object?> get props => [mobile];
-}
+print_step() { echo -e "${CYAN}▶ $1${NC}"; }
+print_success() { echo -e "${GREEN}✅ $1${NC}"; }
+print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+print_error() { echo -e "${RED}❌ $1${NC}"; }
 
-class VerifyOtpEvent extends AuthEvent {
-  final String mobile;
-  final String otp;
-  const VerifyOtpEvent({required this.mobile, required this.otp});
-  @override
-  List<Object?> get props => [mobile, otp];
-}
-FILE13
-echo "✅ auth_event.dart"
+# ─── Detect OS ───
+OS_TYPE="unknown"
+case "$(uname -s)" in
+    Linux*)     OS_TYPE="linux";;
+    Darwin*)    OS_TYPE="mac";;
+    MINGW*|CYGWIN*|MSYS*) OS_TYPE="windows";;
+esac
 
-# ===== auth_state.dart =====
-cat > lib/features/auth/presentation/bloc/auth_state.dart << 'FILE14'
-import 'package:equatable/equatable.dart';
-import '../../domain/entities/user.dart';
+# =============================================================
+# 🎬 START
+# =============================================================
 
-abstract class AuthState extends Equatable {
-  const AuthState();
-  @override
-  List<Object?> get props => [];
-}
+clear
+echo ""
+echo -e "${BLUE}╔══════════════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║${NC}                                                  ${BLUE}║${NC}"
+echo -e "${BLUE}║${NC}    🚀 ${GREEN}PayEase Auto-Setup${NC} 💳                    ${BLUE}║${NC}"
+echo -e "${BLUE}║${NC}    ${YELLOW}Detected OS: ${OS_TYPE}${NC}                          ${BLUE}║${NC}"
+echo -e "${BLUE}║${NC}                                                  ${BLUE}║${NC}"
+echo -e "${BLUE}╚══════════════════════════════════════════════════╝${NC}"
+echo ""
 
-class AuthInitial extends AuthState {}
-class AuthLoading extends AuthState {}
+# =============================================================
+# 📦 Step 1: Check & Install Flutter
+# =============================================================
 
-class OtpSentState extends AuthState {
-  final String mobile;
-  const OtpSentState(this.mobile);
-  @override
-  List<Object?> get props => [mobile];
-}
+print_header "📦 Step 1: Checking Flutter Installation"
 
-class AuthenticatedState extends AuthState {
-  final User user;
-  const AuthenticatedState(this.user);
-  @override
-  List<Object?> get props => [user];
-}
+if ! command -v flutter &> /dev/null; then
+    print_warning "Flutter not found. Installing..."
+    
+    # Install location
+    FLUTTER_DIR="$HOME/flutter"
+    
+    print_step "Cloning Flutter SDK (this may take 2-3 minutes)..."
+    git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$FLUTTER_DIR"
+    
+    # Add to PATH based on OS
+    if [ "$OS_TYPE" = "windows" ]; then
+        # Windows (Git Bash)
+        echo "export PATH=\"\$PATH:$FLUTTER_DIR/bin\"" >> ~/.bashrc
+        export PATH="$PATH:$FLUTTER_DIR/bin"
+    elif [ "$OS_TYPE" = "mac" ]; then
+        # Mac
+        SHELL_RC="$HOME/.zshrc"
+        [ -f "$HOME/.bash_profile" ] && SHELL_RC="$HOME/.bash_profile"
+        echo "export PATH=\"\$PATH:$FLUTTER_DIR/bin\"" >> "$SHELL_RC"
+        export PATH="$PATH:$FLUTTER_DIR/bin"
+    else
+        # Linux
+        echo "export PATH=\"\$PATH:$FLUTTER_DIR/bin\"" >> ~/.bashrc
+        export PATH="$PATH:$FLUTTER_DIR/bin"
+    fi
+    
+    print_success "Flutter installed at $FLUTTER_DIR"
+else
+    print_success "Flutter already installed!"
+    flutter --version | head -1
+fi
 
-class AuthErrorState extends AuthState {
-  final String message;
-  const AuthErrorState(this.message);
-  @override
-  List<Object?> get props => [message];
-}
-FILE14
-echo "✅ auth_state.dart"
+# =============================================================
+# 🌐 Step 2: Configure Flutter
+# =============================================================
 
-# ===== auth_bloc.dart =====
-cat > lib/features/auth/presentation/bloc/auth_bloc.dart << 'FILE15'
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/usecases/send_otp.dart';
-import '../../domain/usecases/verify_otp.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+print_header "🌐 Step 2: Configuring Flutter"
 
-class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final SendOtp sendOtp;
-  final VerifyOtp verifyOtp;
+print_step "Enabling Flutter Web..."
+flutter config --enable-web > /dev/null 2>&1
+flutter config --no-analytics > /dev/null 2>&1
+dart --disable-analytics > /dev/null 2>&1
+print_success "Flutter Web enabled!"
 
-  AuthBloc({required this.sendOtp, required this.verifyOtp}) : super(AuthInitial()) {
-    on<SendOtpEvent>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        await sendOtp(event.mobile);
-        emit(OtpSentState(event.mobile));
-      } catch (e) {
-        emit(AuthErrorState(e.toString().replaceFirst('Exception: ', '')));
-      }
-    });
+# =============================================================
+# 🔧 Step 3: Git Safe Directory
+# =============================================================
 
-    on<VerifyOtpEvent>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        final user = await verifyOtp(mobile: event.mobile, otp: event.otp);
-        emit(AuthenticatedState(user));
-      } catch (e) {
-        emit(AuthErrorState(e.toString().replaceFirst('Exception: ', '')));
-      }
-    });
-  }
-}
-FILE15
-echo "✅ auth_bloc.dart"
+print_header "🔧 Step 3: Configuring Git"
+git config --global --add safe.directory "$(pwd)" 2>/dev/null || true
+git config --global --add safe.directory '*' 2>/dev/null || true
+print_success "Git configured!"
 
-# ===== login_page.dart =====
-cat > lib/features/auth/presentation/pages/login_page.dart << 'FILE16'
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../config/routes/route_names.dart';
-import '../../../../service_locator.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+# =============================================================
+# 📦 Step 4: Install Dependencies
+# =============================================================
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
+print_header "📦 Step 4: Installing Project Dependencies"
 
-class _LoginPageState extends State<LoginPage> {
-  final mobileCtrl = TextEditingController();
+if [ ! -f "pubspec.yaml" ]; then
+    print_error "No pubspec.yaml found! Are you in the project root?"
+    exit 1
+fi
 
-  @override
-  void dispose() { mobileCtrl.dispose(); super.dispose(); }
+print_step "Running flutter pub get..."
+flutter pub get
+print_success "Dependencies installed!"
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AuthBloc>(),
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is OtpSentState) {
-            context.go(RouteNames.otp, extra: {'mobile': state.mobile});
-          }
-          if (state is AuthErrorState) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
-        child: Scaffold(
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.account_balance_wallet, size: 72, color: Colors.indigo),
-                      const SizedBox(height: 16),
-                      const Text('PayEase', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      const Text('Payments Made Easy!', style: TextStyle(color: Colors.grey)),
-                      const SizedBox(height: 32),
-                      TextField(
-                        controller: mobileCtrl,
-                        keyboardType: TextInputType.phone,
-                        maxLength: 10,
-                        decoration: InputDecoration(
-                          counterText: '',
-                          prefixText: '+91 ',
-                          labelText: 'Mobile Number',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      BlocBuilder<AuthBloc, AuthState>(
-                        builder: (context, state) {
-                          return SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: state is AuthLoading ? null : () {
-                                final m = mobileCtrl.text.trim();
-                                if (m.length != 10) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Enter valid 10-digit number')));
-                                  return;
-                                }
-                                context.read<AuthBloc>().add(SendOtpEvent(m));
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.indigo,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: state is AuthLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Text('Send OTP', style: TextStyle(fontSize: 16)),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text('Demo OTP: 123456', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-FILE16
-echo "✅ login_page.dart"
+# =============================================================
+# 🩺 Step 5: Verify Setup
+# =============================================================
 
-# ===== otp_page.dart =====
-cat > lib/features/auth/presentation/pages/otp_page.dart << 'FILE17'
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../config/routes/route_names.dart';
-import '../../../../service_locator.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+print_header "🩺 Step 5: Verifying Setup"
+flutter doctor
 
-class OtpPage extends StatefulWidget {
-  final String mobile;
-  const OtpPage({super.key, required this.mobile});
-  @override
-  State<OtpPage> createState() => _OtpPageState();
-}
-
-class _OtpPageState extends State<OtpPage> {
-  final otpCtrl = TextEditingController();
-
-  @override
-  void dispose() { otpCtrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AuthBloc>(),
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthenticatedState) context.go(RouteNames.home);
-          if (state is AuthErrorState) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Verify OTP')),
-          body: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.sms, size: 64, color: Colors.indigo),
-                    const SizedBox(height: 16),
-                    Text('OTP sent to +91 ${widget.mobile}', style: const TextStyle(fontSize: 18)),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: otpCtrl,
-                      keyboardType: TextInputType.number,
-                      maxLength: 6,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 24, letterSpacing: 8),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        labelText: 'Enter 6-digit OTP',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        return SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: state is AuthLoading ? null : () {
-                              final otp = otpCtrl.text.trim();
-                              if (otp.length != 6) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Enter valid 6-digit OTP')));
-                                return;
-                              }
-                              context.read<AuthBloc>().add(
-                                VerifyOtpEvent(mobile: widget.mobile, otp: otp));
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.indigo,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: state is AuthLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text('Verify OTP', style: TextStyle(fontSize: 16)),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text('Demo OTP: 123456', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-FILE17
-echo "✅ otp_page.dart"
-
-# ===== home_page.dart =====
-mkdir -p lib/features/home/presentation/pages
-cat > lib/features/home/presentation/pages/home_page.dart << 'FILE18'
-import 'package:flutter/material.dart';
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('PayEase'), centerTitle: true),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.check_circle, size: 80, color: Colors.green),
-            SizedBox(height: 16),
-            Text('Login Successful!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('Welcome to PayEase', style: TextStyle(fontSize: 16, color: Colors.grey)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-FILE18
-echo "✅ home_page.dart"
+# =============================================================
+# 🎉 Done!
+# =============================================================
 
 echo ""
-echo "🎉🎉🎉 ALL AUTH FILES CREATED SUCCESSFULLY! 🎉🎉🎉"
+echo -e "${GREEN}╔══════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║${NC}                                                  ${GREEN}║${NC}"
+echo -e "${GREEN}║${NC}    ✅ ${GREEN}PayEase Setup Complete!${NC} 🎉                ${GREEN}║${NC}"
+echo -e "${GREEN}║${NC}                                                  ${GREEN}║${NC}"
+echo -e "${GREEN}╚══════════════════════════════════════════════════╝${NC}"
 echo ""
-echo "Now run:"
-echo "  flutter pub get"
-echo "  flutter run -d web-server --web-hostname=0.0.0.0 --web-port=3000"
+
+echo -e "${CYAN}🚀 Run the app:${NC}"
+echo -e "   ${GREEN}flutter run -d chrome${NC}"
+echo ""
+echo -e "${CYAN}🌐 Or web server (Codespaces/Gitpod):${NC}"
+echo -e "   ${GREEN}flutter run -d web-server --web-hostname=0.0.0.0 --web-port=3000${NC}"
+echo ""
+echo -e "${CYAN}🔑 Demo Login:${NC}"
+echo -e "   Mobile: ${YELLOW}9876543210${NC}"
+echo -e "   OTP:    ${YELLOW}123456${NC}"
+echo ""
+
+# =============================================================
+# 🎯 Auto-Run (Optional)
+# =============================================================
+
+read -p "$(echo -e ${YELLOW}Run app now? [Y/n]: ${NC})" -n 1 -r AUTORUN
+echo
+if [[ ! "$AUTORUN" =~ ^[Nn]$ ]]; then
+    print_step "Starting PayEase..."
+    flutter run -d chrome
+fi

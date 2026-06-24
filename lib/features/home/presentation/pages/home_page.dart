@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../widgets/bill_categories_strip.dart';
 import '../widgets/home_header.dart';
 import '../widgets/promo_banner_carousel.dart';
@@ -14,73 +14,70 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            await Future.delayed(const Duration(milliseconds: 800));
-          },
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
+      backgroundColor: AppColors.scaffoldBg,
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () async {
+          await Future.delayed(const Duration(milliseconds: 800));
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          slivers: const [
+            // Hero dark section (Header + Wallet Card)
+            SliverToBoxAdapter(child: _HeroSection()),
+
+            // Quick Actions
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 24, 16, 0),
+              sliver: SliverToBoxAdapter(child: QuickActionsGrid()),
             ),
-            slivers: const [
-              // Header (greeting + notifications)
-              SliverToBoxAdapter(
-                child: HomeHeader(),
-              ),
 
-              // Wallet Balance Card
-              SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: AppSizes.lg),
-                sliver: SliverToBoxAdapter(
-                  child: WalletBalanceCard(),
-                ),
-              ),
+            SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-              SliverToBoxAdapter(
-                child: SizedBox(height: AppSizes.xl),
-              ),
+            // Promo Carousel
+            SliverToBoxAdapter(child: PromoBannerCarousel()),
 
-              // Quick Actions Grid
-              SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: AppSizes.lg),
-                sliver: SliverToBoxAdapter(
-                  child: QuickActionsGrid(),
-                ),
-              ),
+            SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-              SliverToBoxAdapter(
-                child: SizedBox(height: AppSizes.xl),
-              ),
+            // Bill Categories
+            SliverToBoxAdapter(child: BillCategoriesStrip()),
 
-              // Promo / Cashback Offers Carousel
-              SliverToBoxAdapter(
-                child: PromoBannerCarousel(),
-              ),
+            SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-              SliverToBoxAdapter(
-                child: SizedBox(height: AppSizes.xl),
-              ),
+            // Recent Transactions
+            SliverToBoxAdapter(child: RecentTransactionsSection()),
 
-              // Bill Categories
-              SliverToBoxAdapter(
-                child: BillCategoriesStrip(),
-              ),
+            SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-              SliverToBoxAdapter(
-                child: SizedBox(height: AppSizes.xl),
-              ),
+class _HeroSection extends StatelessWidget {
+  const _HeroSection();
 
-              // Recent Transactions
-              SliverToBoxAdapter(
-                child: RecentTransactionsSection(),
-              ),
-
-              SliverToBoxAdapter(
-                child: SizedBox(height: AppSizes.xxxl),
-              ),
-            ],
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.walletGradient,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: const [
+            HomeHeader(),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: WalletBalanceCard(),
+            ),
+          ],
         ),
       ),
     );
