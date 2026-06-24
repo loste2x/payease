@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
 
@@ -24,7 +26,7 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
       ),
       child: Column(
         children: [
-          // Balance Section
+          // ═══════════ Balance Section ═══════════
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
             child: Column(
@@ -54,13 +56,48 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
                       ),
                     ),
                     const Spacer(),
+                    // Tap full wallet
+                    InkWell(
+                      onTap: () => context.push(RouteNames.wallet),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'View',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              size: 12,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     InkWell(
                       onTap: () => setState(() => _showBalance = !_showBalance),
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         child: Icon(
-                          _showBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          _showBalance
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
                           color: Colors.white.withValues(alpha: 0.8),
                           size: 18,
                         ),
@@ -70,7 +107,7 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
                 ),
                 const SizedBox(height: 16),
 
-                // Balance
+                // ═══════════ Balance Amount ═══════════
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -88,7 +125,7 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
                     const SizedBox(width: 4),
                     Text(
                       _showBalance
-                          ? _formatLargeAmount(_balanceInPaisa)
+                          ? _formatBalance(_balanceInPaisa)
                           : '••••••',
                       style: const TextStyle(
                         color: Colors.white,
@@ -102,10 +139,12 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
 
                 const SizedBox(height: 4),
 
+                // ═══════════ Weekly Bonus Badge ═══════════
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.tertiary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -113,7 +152,8 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.trending_up_rounded, size: 12, color: AppColors.tertiary),
+                          Icon(Icons.trending_up_rounded,
+                              size: 12, color: AppColors.tertiary),
                           SizedBox(width: 3),
                           Text(
                             '+₹250 this week',
@@ -132,31 +172,31 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
             ),
           ),
 
-          // Divider
+          // ═══════════ Divider ═══════════
           Container(
             height: 1,
             color: Colors.white.withValues(alpha: 0.1),
           ),
 
-          // Action Buttons
+          // ═══════════ Action Buttons Row ═══════════
           Row(
             children: [
               _BalanceAction(
                 icon: Icons.add_rounded,
                 label: 'Add Money',
-                onTap: () {},
+                onTap: () => context.push(RouteNames.addMoney),
               ),
-              _VDivider(),
+              const _VDivider(),
               _BalanceAction(
                 icon: Icons.arrow_outward_rounded,
                 label: 'Send',
-                onTap: () {},
+                onTap: () => context.push(RouteNames.sendMoney),
               ),
-              _VDivider(),
+              const _VDivider(),
               _BalanceAction(
                 icon: Icons.account_balance_rounded,
                 label: 'Withdraw',
-                onTap: () {},
+                onTap: () => context.push(RouteNames.withdraw),
               ),
             ],
           ),
@@ -165,12 +205,14 @@ class _WalletBalanceCardState extends State<WalletBalanceCard> {
     );
   }
 
-  String _formatLargeAmount(int paisa) {
-    final rupees = paisa / 100;
+  String _formatBalance(int paisa) {
     return Formatters.currency(paisa, showSymbol: false);
   }
 }
 
+// ═══════════════════════════════════════════════════
+// 💎 Balance Action Button
+// ═══════════════════════════════════════════════════
 class _BalanceAction extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -185,23 +227,29 @@ class _BalanceAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            children: [
-              Icon(icon, color: Colors.white, size: 22),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Icon(icon, color: Colors.white, size: 22),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -209,7 +257,12 @@ class _BalanceAction extends StatelessWidget {
   }
 }
 
+// ═══════════════════════════════════════════════════
+// 📏 Vertical Divider
+// ═══════════════════════════════════════════════════
 class _VDivider extends StatelessWidget {
+  const _VDivider();
+
   @override
   Widget build(BuildContext context) {
     return Container(
