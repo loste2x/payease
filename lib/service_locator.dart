@@ -1,68 +1,77 @@
-import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
 
-import 'config/routes/route_names.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/pages/otp_page.dart';
-import 'features/home/presentation/pages/main_wrapper_page.dart';
-import 'features/wallet/presentation/pages/add_money_page.dart';
-import 'features/wallet/presentation/pages/payment_success_page.dart';
-import 'features/wallet/presentation/pages/send_money_page.dart';
-import 'features/wallet/presentation/pages/wallet_home_page.dart';
-import 'features/wallet/presentation/pages/withdraw_page.dart';
+import 'features/auth/data/datasources/auth_remote_datasource.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/send_otp.dart';
+import 'features/auth/domain/usecases/verify_otp.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 
-class AppRouter {
-  AppRouter._();
+import 'features/wallet/data/datasources/wallet_remote_datasource.dart';
+import 'features/wallet/data/repositories/wallet_repository_impl.dart';
+import 'features/wallet/domain/repositories/wallet_repository.dart';
+import 'features/wallet/domain/usecases/add_money.dart';
+import 'features/wallet/domain/usecases/get_balance.dart';
+import 'features/wallet/domain/usecases/send_money.dart';
+import 'features/wallet/domain/usecases/withdraw_money.dart';
+import 'features/wallet/presentation/bloc/wallet_bloc.dart';
 
-  static final GoRouter router = GoRouter(
-    initialLocation: RouteNames.login,
-    debugLogDiagnostics: true,
-    routes: [
-      GoRoute(
-        path: RouteNames.login,
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: RouteNames.otp,
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          final mobile = extra?['mobile'] as String? ?? '';
-          return OtpPage(mobile: mobile);
-        },
-      ),
-      GoRoute(
-        path: RouteNames.home,
-        builder: (context, state) => const MainWrapperPage(),
-      ),
+final sl = GetIt.instance;
 
-      // ─── Wallet Routes ───
-      GoRoute(
-        path: RouteNames.wallet,
-        builder: (context, state) => const WalletHomePage(),
-      ),
-      GoRoute(
-        path: RouteNames.addMoney,
-        builder: (context, state) => const AddMoneyPage(),
-      ),
-      GoRoute(
-        path: RouteNames.sendMoney,
-        builder: (context, state) => const SendMoneyPage(),
-      ),
-      GoRoute(
-        path: RouteNames.withdraw,
-        builder: (context, state) => const WithdrawPage(),
-      ),
-      GoRoute(
-        path: RouteNames.billReceipt,
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          return PaymentSuccessPage(
-            amount: extra?['amount'] as int? ?? 0,
-            refId: extra?['refId'] as String? ?? '',
-            title: extra?['title'] as String? ?? 'Payment Successful!',
-            receiver: extra?['receiver'] as String?,
-          );
-        },
-      ),
-    ],
+Future<void> initDependencies() async {
+  // ═══════════════════════════════════════════════════
+  // 🔐 AUTH MODULE
+  // ═══════════════════════════════════════════════════
+
+  // Data Sources
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(remoteDataSource: sl<AuthRemoteDataSource>()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => SendOtp(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => VerifyOtp(sl<AuthRepository>()));
+
+  // Blocs (Factory — new instance each time)
+  sl.registerFactory(
+    () => AuthBloc(
+      sendOtp: sl<SendOtp>(),
+      verifyOtp: sl<VerifyOtp>(),
+    ),
+  );
+
+  // ═══════════════════════════════════════════════════
+  // 💳 WALLET MODULE
+  // ═══════════════════════════════════════════════════
+
+  // Data Sources
+  sl.registerLazySingleton<WalletRemoteDataSource>(
+    () => WalletRemoteDataSourceImpl(),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<WalletRepository>(
+    () => WalletRepositoryImpl(remoteDataSource: sl<WalletRemoteDataSource>()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetBalance(sl<WalletRepository>()));
+  sl.registerLazySingleton(() => AddMoney(sl<WalletRepository>()));
+  sl.registerLazySingleton(() => SendMoney(sl<WalletRepository>()));
+  sl.registerLazySingleton(() => WithdrawMoney(sl<WalletRepository>()));
+
+  // Blocs
+  sl.registerFactory(
+    () => WalletBloc(
+      getBalance: sl<GetBalance>(),
+      addMoney: sl<AddMoney>(),
+      sendMoney: sl<SendMoney>(),
+      withdrawMoney: sl<WithdrawMoney>(),
+    ),
   );
 }
